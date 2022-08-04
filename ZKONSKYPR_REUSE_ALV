@@ -1,0 +1,109 @@
+*&---------------------------------------------------------------------*
+*& Report  ZKONSKYPR_REUSE_ALV
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+REPORT ZKONSKYPR_REUSE_ALV.
+
+DATA: gt_fieldcatalog TYPE STANDARD TABLE OF slis_fieldcat_alv,
+      gt_fieldcatalog_1 TYPE STANDARD TABLE OF slis_t_fieldcat_alv,
+      wa_fieldcatalog TYPE slis_fieldcat_alv,
+      gt_layout       TYPE slis_layout_alv.
+
+START-OF-SELECTION.
+  PERFORM fieldcat.
+  PERFORM create_layout.
+  PERFORM display_alv.
+  
+*&---------------------------------------------------------------------*
+*&      Form  display_alv
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM display_alv .
+
+  lt_zrt_ecomm_old = lt_zrt_ecomm.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program       = sy-repid
+      i_callback_pf_status_set = 'SET_PF_STATUS'
+      i_callback_user_command  = 'USER_COMMAND'
+      is_layout                = gt_layout
+      it_fieldcat              = gt_fieldcatalog
+    TABLES
+      t_outtab                 = lt_ztable1
+    EXCEPTIONS
+      program_error            = 1
+      OTHERS                   = 2.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.                    "display_alv
+
+*&---------------------------------------------------------------------*
+*&      Form  USER_COMMAND
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_UCOMM    text
+*      -->P_SELFLD   text
+*----------------------------------------------------------------------*
+FORM user_command USING p_ucomm TYPE sy-ucomm
+                        p_selfld TYPE slis_selfield.
+
+  IF p_ucomm = '&DATA_SAVE'.
+    PERFORM check_changed_data.
+  ENDIF.
+
+ENDFORM.                    "USER_COMMAND
+
+*&---------------------------------------------------------------------*
+*&      Form  set_pf_status
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->EXTAB      text
+*----------------------------------------------------------------------*
+FORM set_pf_status USING extab TYPE slis_t_extab.
+
+  SET PF-STATUS 'ZSTANDARD_FULLSCREEN'." EXCLUDING extab.
+
+ENDFORM.                    "set_pf_status
+
+*&---------------------------------------------------------------------*
+*&      Form  create_fieldcat
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM fieldcat.
+
+  wa_fieldcatalog-fieldname     = 'VBELN'.
+  wa_fieldcatalog-ref_fieldname = 'VBELN'.
+  wa_fieldcatalog-ref_tabname   = 'ZRT_ECOMM'.
+  wa_fieldcatalog-col_pos       = 0.
+  APPEND wa_fieldcatalog TO gt_fieldcatalog.
+  CLEAR  wa_fieldcatalog.
+  .
+  .
+  .
+  .
+  .
+ENDFORM.                    "create_fieldcat
+
+*&---------------------------------------------------------------------*
+*&      Form  create_layout
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM create_layout.
+
+  gt_layout-colwidth_optimize = 'X'.
+  gt_layout-zebra             = 'X'.
+
+ENDFORM.                    "
